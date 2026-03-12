@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Recording Overlay</title>
+  <link rel="stylesheet" href="overlay.css">
+</head>
+<body class="style-pill">
+
+  <div id="overlay" class="overlay">
+
+    <!-- ─── Pill Style Content ─── -->
+    <div class="pill-content">
+      <div id="pill-recording" style="display: none;">
+        <div class="pill-recording">
+          <div class="rec-dot"></div>
+          <div class="waveform" id="waveform">
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+          </div>
+          <span class="timer" id="pill-timer">0:00</span>
+        </div>
+      </div>
+      <div id="pill-transcribing" style="display: none;">
+        <span class="transcribing-label">Transcribing<span class="dots"><span>.</span><span>.</span><span>.</span></span></span>
+      </div>
+      <div id="pill-done" style="display: none;">
+        <span class="done-label">&#10003; Pasted!</span>
+      </div>
+      <div id="pill-error" style="display: none;">
+        <span class="error-label" id="pill-error-text">Error</span>
+      </div>
+    </div>
+
+    <!-- ─── Dot Style Content ─── -->
+    <div class="dot-content">
+      <div class="indicator-dot" id="dot-indicator"></div>
+    </div>
+
+    <!-- ─── Bar Style Content ─── -->
+    <div class="bar-content">
+      <div class="bar-label" id="bar-label">Recording</div>
+      <div class="gradient-line" id="bar-line"></div>
+    </div>
+
+    <!-- ─── Orb Style Content ─── -->
+    <div class="orb-content">
+      <div class="orb-sphere" id="orb-sphere"></div>
+    </div>
+
+  </div>
+
+  <script src="overlay.js"></script>
+</body>
+</html>

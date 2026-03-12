@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Echo</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/setup.css">
+  <link rel="stylesheet" href="css/settings.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Setup Wizard -->
+    <div id="setup-view" class="view" style="display: none;">
+      <div class="setup-container">
+
+        <!-- Step 1: Welcome -->
+        <div class="setup-step" id="step-1">
+          <div class="step-icon">
+            <svg width="64" height="64" viewBox="0 0 48 48" fill="none">
+              <rect width="48" height="48" rx="12" fill="#4A90D9"/>
+              <path d="M14 20v8M20 16v16M26 12v24M32 16v16M38 20v8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2>Welcome to Echo</h2>
+          <p class="step-desc">AI-powered voice transcription for macOS.<br>Hold a key to record, release to transcribe and paste.</p>
+          <div class="step-actions">
+            <button id="step1-next" class="btn btn-primary btn-wide">Get Started</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Groq API Key -->
+        <div class="setup-step" id="step-2" style="display: none;">
+          <div class="step-icon">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <rect width="64" height="64" rx="16" fill="#4A90D9"/>
+              <path d="M32 18c-4.4 0-8 3.6-8 8 0 3.1 1.8 5.8 4.4 7.1V42h7.2V33.1c2.6-1.3 4.4-4 4.4-7.1 0-4.4-3.6-8-8-8zm0 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8z" fill="white"/>
+            </svg>
+          </div>
+          <h2>Groq API Key</h2>
+          <p class="step-desc">Used for fast speech-to-text transcription (Whisper).<br>Get a free key at <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a></p>
+          <div class="input-group">
+            <input type="password" id="setup-groq-key" placeholder="gsk_..." autocomplete="off">
+            <button id="validate-groq" class="btn btn-secondary">Validate</button>
+          </div>
+          <div id="groq-status" class="status-msg"></div>
+          <div class="step-actions step-actions-split">
+            <button id="step2-back" class="btn btn-ghost">Back</button>
+            <button id="step2-next" class="btn btn-primary" disabled>Continue</button>
+          </div>
+        </div>
+
+        <!-- Step 3: OpenRouter API Key -->
+        <div class="setup-step" id="step-3" style="display: none;">
+          <div class="step-icon">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <rect width="64" height="64" rx="16" fill="#4A90D9"/>
+              <path d="M32 18c-4.4 0-8 3.6-8 8 0 3.1 1.8 5.8 4.4 7.1V42h7.2V33.1c2.6-1.3 4.4-4 4.4-7.1 0-4.4-3.6-8-8-8zm0 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8z" fill="white"/>
+            </svg>
+          </div>
+          <h2>OpenRouter API Key</h2>
+          <p class="step-desc">Used for AI post-processing of transcriptions.<br>Get a key at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai</a></p>
+          <div class="input-group">
+            <input type="password" id="setup-openrouter-key" placeholder="sk-or-..." autocomplete="off">
+            <button id="validate-openrouter" class="btn btn-secondary">Validate</button>
+          </div>
+          <div id="openrouter-status" class="status-msg"></div>
+          <p class="hint">Optional — without this, raw transcriptions will be used without cleanup.</p>
+          <div class="step-actions step-actions-split">
+            <button id="step3-back" class="btn btn-ghost">Back</button>
+            <button id="step3-next" class="btn btn-primary">Continue</button>
+          </div>
+        </div>
+
+        <!-- Step 4: Microphone Access -->
+        <div class="setup-step" id="step-4" style="display: none;">
+          <div class="step-icon">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <rect width="64" height="64" rx="16" fill="#4A90D9"/>
+              <path d="M32 16a6 6 0 0 0-6 6v10a6 6 0 0 0 12 0V22a6 6 0 0 0-6-6z" fill="white"/>
+              <path d="M22 30v2a10 10 0 0 0 20 0v-2" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="32" y1="42" x2="32" y2="48" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="26" y1="48" x2="38" y2="48" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2>Microphone Access</h2>
+          <p class="step-desc">Echo needs access to your microphone to record audio for transcription.</p>
+          <div class="permission-card" id="perm-card-mic">
+            <div class="permission-card-left">
+              <svg width="20" height="20" viewBox="0 0 64 64" fill="none">
+                <path d="M32 8a8 8 0 0 0-8 8v16a8 8 0 0 0 16 0V16a8 8 0 0 0-8-8z" fill="#4A90D9"/>
+                <path d="M16 28v4a16 16 0 0 0 32 0v-4" stroke="#4A90D9" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+              <span>Microphone</span>
+            </div>
+            <div class="permission-card-right">
+              <button id="grant-mic" class="btn btn-secondary btn-sm">Grant Access</button>
+              <span id="mic-granted" class="perm-granted" style="display: none;">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="#00b894"/><path d="M5 9l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Granted
+              </span>
+            </div>
+          </div>
+          <div class="step-actions step-actions-split">
+            <button id="step4-back" class="btn btn-ghost">Back</button>
+            <button id="step4-next" class="btn btn-primary" disabled>Continue</button>
+          </div>
+        </div>
+
+        <!-- Step 5: Accessibility Access -->
+        <div class="setup-step" id="step-5" style="display: none;">
+          <div class="step-icon">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <rect width="64" height="64" rx="16" fill="#4A90D9"/>
+              <path d="M32 16c-1.1 0-2 .9-2 2v2h-6a2 2 0 0 0-2 2v22a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V22a2 2 0 0 0-2-2h-6v-2c0-1.1-.9-2-2-2z" fill="white" opacity="0.3"/>
+              <path d="M22 20v4M26 18v8M30 16v12M34 18v8M38 20v4" stroke="white" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="32" cy="40" r="4" fill="white"/>
+            </svg>
+          </div>
+          <h2>Accessibility Access</h2>
+          <p class="step-desc">Echo needs Accessibility access to detect key presses and paste transcribed text into your apps.</p>
+          <div class="permission-card" id="perm-card-acc">
+            <div class="permission-card-left">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 2C5.6 2 2 5.6 2 10s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 11.2c-2 0-3.8-1-4.8-2.6C5.6 12 8 11.2 10 11.2s4.4.8 4.8 2.4c-1 1.6-2.8 2.6-4.8 2.6z" fill="#4A90D9"/>
+              </svg>
+              <span>Accessibility</span>
+            </div>
+            <div class="permission-card-right">
+              <button id="grant-acc" class="btn btn-secondary btn-sm">Grant Access</button>
+              <span id="acc-granted" class="perm-granted" style="display: none;">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="#00b894"/><path d="M5 9l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Granted
+              </span>
+            </div>
+          </div>
+          <p class="hint">A macOS system dialog will appear. You may need to restart Echo after granting access.</p>
+          <p class="hint" id="acc-retry-hint" style="display: none; color: #fdcb6e;">
+            Could not detect the permission change. Click "Check Again" above, or
+            <button id="restart-app-btn" class="btn btn-ghost btn-sm" style="display:inline; padding: 2px 8px;">Restart Echo</button>
+            to apply.
+          </p>
+          <div class="step-actions step-actions-split">
+            <button id="step5-back" class="btn btn-ghost">Back</button>
+            <button id="step5-next" class="btn btn-primary" disabled>Continue</button>
+          </div>
+        </div>
+
+        <!-- Step 6: Push-to-Talk Key -->
+        <div class="setup-step" id="step-6" style="display: none;">
+          <div class="step-icon">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <rect width="64" height="64" rx="16" fill="#4A90D9"/>
+              <rect x="14" y="22" width="36" height="22" rx="4" fill="none" stroke="white" stroke-width="2.5"/>
+              <rect x="18" y="26" width="5" height="4" rx="1" fill="white"/>
+              <rect x="25" y="26" width="5" height="4" rx="1" fill="white"/>
+              <rect x="32" y="26" width="5" height="4" rx="1" fill="white"/>
+              <rect x="39" y="26" width="5" height="4" rx="1" fill="white"/>
+              <rect x="46" y="26" width="4" height="4" rx="1" fill="white"/>
+              <rect x="18" y="32" width="5" height="4" rx="1" fill="white"/>
+              <rect x="25" y="32" width="5" height="4" rx="1" fill="white"/>
+              <rect x="32" y="32" width="5" height="4" rx="1" fill="white"/>
+              <rect x="39" y="32" width="5" height="4" rx="1" fill="white"/>
+              <rect x="46" y="32" width="4" height="4" rx="1" fill="white"/>
+              <rect x="22" y="38" width="20" height="4" rx="1" fill="white"/>
+            </svg>
+          </div>
+          <h2>Push-to-Talk Key</h2>
+          <p class="step-desc">Choose which key to hold while speaking.<br>Press and hold to record, release to transcribe.</p>
+          <div class="key-capture-area">
+            <div class="key-options">
+              <label class="key-option selected" data-key="fn">
+                <input type="radio" name="ptt-key" value="fn" checked>
+                <span class="key-option-label">Fn (Globe)</span>
+              </label>
+              <label class="key-option" data-key="right-option">
+                <input type="radio" name="ptt-key" value="right-option">
+                <span class="key-option-label">Right Option</span>
+              </label>
+              <label class="key-option" data-key="custom">
+                <input type="radio" name="ptt-key" value="custom">
+                <span class="key-option-label">Custom Key</span>
+                <input type="text" id="ptt-custom-key-input" class="custom-key-input" readonly placeholder="Click to set key..." style="display:none">
+              </label>
+            </div>
+            <p class="hint hint-tip" id="fn-tip">Tip: If Fn opens Emoji picker, go to System Settings &rarr; Keyboard &rarr; "Press globe key to" &rarr; Do Nothing</p>
+          </div>
+          <div class="step-actions step-actions-split">
+            <button id="step6-back" class="btn btn-ghost">Back</button>
+            <button id="step6-next" class="btn btn-primary">Continue</button>
+          </div>
+        </div>
+
+        <!-- Step 7: Custom Vocabulary -->
+        <div class="setup-step" id="step-7" style="display: none;">
+          <div class="step-icon">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <rect width="64" height="64" rx="16" fill="#4A90D9"/>
+              <rect x="18" y="14" width="28" height="36" rx="4" fill="none" stroke="white" stroke-width="2.5"/>
+              <line x1="24" y1="24" x2="40" y2="24" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <line x1="24" y1="30" x2="40" y2="30" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <line x1="24" y1="36" x2="34" y2="36" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2>Custom Vocabulary</h2>
+          <p class="step-desc">Add words and phrases that should be preserved in post-processing.</p>
+          <div class="vocab-section">
+            <label class="vocab-label">Vocabulary</label>
+            <textarea id="setup-vocabulary" rows="5" placeholder="e.g. Kubernetes, TypeScript, OpenRouter"></textarea>
+            <p class="hint">Separate entries with commas, new lines, or semicolons.</p>
+          </div>
+          <div class="step-actions step-actions-split">
+            <button id="step7-back" class="btn btn-ghost">Back</button>
+            <button id="step7-next" class="btn btn-primary">Continue</button>
+          </div>
+        </div>
+
+        <!-- Step 8: Indicator Style -->
+        <div class="setup-step" id="step-8" style="display: none;">
+          <div class="step-icon">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <rect width="64" height="64" rx="16" fill="#4A90D9"/>
+              <rect x="12" y="14" width="40" height="6" rx="3" fill="white" opacity="0.3"/>
+              <circle cx="32" cy="17" r="4" fill="white"/>
+              <rect x="16" y="28" width="32" height="3" rx="1.5" fill="white" opacity="0.5"/>
+              <rect x="20" y="36" width="24" height="20" rx="4" fill="none" stroke="white" stroke-width="2"/>
+              <path d="M28 42v8M32 40v10M36 43v7" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2>Indicator Style</h2>
+          <p class="step-desc">Choose how the recording indicator looks on your screen.</p>
+          <div class="style-options">
+            <label class="style-option selected" data-style="pill">
+              <input type="radio" name="overlay-style" value="pill" checked>
+              <div class="style-preview style-preview-pill">
+                <div class="sp-dot"></div>
+                <div class="sp-bars"><span></span><span></span><span></span><span></span><span></span></div>
+                <div class="sp-time">0:03</div>
+              </div>
+              <span class="style-option-label">Waveform Pill</span>
+              <span class="style-option-desc">Frosted pill with waveform and timer</span>
+            </label>
+            <label class="style-option" data-style="dot">
+              <input type="radio" name="overlay-style" value="dot">
+              <div class="style-preview style-preview-dot">
+                <div class="sp-circle"></div>
+              </div>
+              <span class="style-option-label">Minimal Dot</span>
+              <span class="style-option-desc">Tiny color-changing dot, like iPhone</span>
+            </label>
+            <label class="style-option" data-style="bar">
+              <input type="radio" name="overlay-style" value="bar">
+              <div class="style-preview style-preview-bar">
+                <span class="sp-text">Recording</span>
+                <div class="sp-gradient"></div>
+              </div>
+              <span class="style-option-label">Glass Bar</span>
+              <span class="style-option-desc">Frosted bar with animated gradient line</span>
+            </label>
+            <label class="style-option" data-style="orb">
+              <input type="radio" name="overlay-style" value="orb">
+              <div class="style-preview style-preview-orb">
+                <div class="sp-orb"></div>
+              </div>
+              <span class="style-option-label">AI Orb</span>
+              <span class="style-option-desc">Pulsing sphere that reacts to your voice</span>
+            </label>
+          </div>
+          <div class="step-actions step-actions-split">
+            <button id="step8-back" class="btn btn-ghost">Back</button>
+            <button id="step8-next" class="btn btn-primary">Continue</button>
+          </div>
+        </div>
+
+        <!-- Step 9: Test Recording -->
+        <div class="setup-step" id="step-9" style="display: none;">
+          <div class="step-icon">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <rect width="64" height="64" rx="16" fill="#4A90D9"/>
+              <circle cx="32" cy="28" r="10" fill="none" stroke="white" stroke-width="2.5"/>
+              <path d="M32 22v6l4 4" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M20 44h24" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M24 44v-4h16v4" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2>Test Recording</h2>
+          <p class="step-desc" id="test-instructions">Hold your selected key and say something to test.</p>
+          <div class="test-area">
+            <div id="test-idle" class="test-state">
+              <div class="test-hint">Hold <kbd id="test-key-label">Fn</kbd> to start recording</div>
+            </div>
+            <div id="test-recording" class="test-state" style="display: none;">
+              <div class="test-recording-indicator">
+                <div class="rec-dot"></div>
+                <span>Recording...</span>
+              </div>
+            </div>
+            <div id="test-transcribing" class="test-state" style="display: none;">
+              <div class="test-dots">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+              <div class="test-label">Transcribing...</div>
+            </div>
+            <div id="test-result" class="test-state" style="display: none;">
+              <div class="test-result-text" id="test-result-text"></div>
+            </div>
+          </div>
+          <div class="step-actions step-actions-split">
+            <button id="step9-back" class="btn btn-ghost">Back</button>
+            <div class="step-actions-right">
+              <button id="step9-skip" class="btn btn-ghost">Skip</button>
+              <button id="step9-next" class="btn btn-primary" disabled>Continue</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 10: Ready -->
+        <div class="setup-step" id="step-10" style="display: none;">
+          <div class="step-icon">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <rect width="64" height="64" rx="16" fill="#00b894"/>
+              <path d="M20 32l8 8 16-16" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2>You're all set!</h2>
+          <p class="step-desc">Echo is ready to use. It will run in your menu bar.</p>
+          <div class="ready-features">
+            <div class="feature">
+              <span class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3a4 4 0 0 0-4 4v3a4 4 0 0 0 8 0V7a4 4 0 0 0-4-4z" fill="#4A90D9"/><path d="M5 10v1a5 5 0 0 0 10 0v-1" stroke="#4A90D9" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="16" x2="10" y2="18" stroke="#4A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
+              <span>Hold your key to record</span>
+            </div>
+            <div class="feature">
+              <span class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L10 14.4 5.2 16.9l.9-5.4L2.2 7.7l5.4-.8L10 2z" fill="#4A90D9"/></svg>
+              </span>
+              <span>AI cleans up your speech</span>
+            </div>
+            <div class="feature">
+              <span class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#4A90D9" stroke-width="1.5"/><path d="M7 10h6M10 7v6" stroke="#4A90D9" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
+              <span>Auto-pastes into active app</span>
+            </div>
+          </div>
+          <div class="step-actions">
+            <button id="finish-setup" class="btn btn-primary btn-wide">Start Using Echo</button>
+          </div>
+        </div>
+
+        <!-- Dot indicators -->
+        <div class="dot-indicators" id="dot-indicators">
+          <span class="dot-ind active"></span>
+          <span class="dot-ind"></span>
+          <span class="dot-ind"></span>
+          <span class="dot-ind"></span>
+          <span class="dot-ind"></span>
+          <span class="dot-ind"></span>
+          <span class="dot-ind"></span>
+          <span class="dot-ind"></span>
+          <span class="dot-ind"></span>
+          <span class="dot-ind"></span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Settings View -->
+    <div id="settings-view" class="view" style="display: none;">
+      <div class="settings-container">
+        <!-- Sidebar -->
+        <div class="settings-sidebar">
+          <div class="sidebar-header">
+            <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
+              <rect width="48" height="48" rx="12" fill="#4A90D9"/>
+              <path d="M14 20v8M20 16v16M26 12v24M32 16v16M38 20v8" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <span class="sidebar-title">Echo</span>
+          </div>
+          <nav class="sidebar-nav">
+            <button class="nav-item active" data-tab="general">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.892 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.892-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.421 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.421-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/></svg>
+              General
+            </button>
+            <button class="nav-item" data-tab="prompts">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M14 1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4.414A2 2 0 0 0 3 11.586l-2 2V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12.793a.5.5 0 0 0 .854.353l2.853-2.853A1 1 0 0 1 4.414 12H14a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/></svg>
+              Prompts
+            </button>
+            <button class="nav-item" data-tab="history">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .979.654l-.615.789a6.996 6.996 0 0 0-.418-.302zm1.834 1.79a6.99 6.99 0 0 0-.653-.796l.724-.69c.27.285.52.59.747.91l-.818.576zm.744 1.352a7.08 7.08 0 0 0-.214-.468l.893-.45a7.976 7.976 0 0 1 .45 1.088l-.95.313a7.023 7.023 0 0 0-.179-.483zm.53 2.507a6.991 6.991 0 0 0-.1-1.025l.985-.17c.067.386.106.778.116 1.17l-1 .025zm-.131 1.538c.033-.17.06-.339.081-.51l.993.123a7.957 7.957 0 0 1-.23 1.155l-.964-.267c.046-.165.086-.332.12-.501zm-.952 2.379c.184-.29.346-.594.486-.908l.914.405c-.16.36-.345.706-.555 1.038l-.845-.535zm-.964 1.205c.122-.122.239-.248.35-.378l.758.653a8.073 8.073 0 0 1-.401.432l-.707-.707z"/><path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0v1z"/><path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z"/></svg>
+              History
+            </button>
+          </nav>
+          <div class="sidebar-footer">
+            <button id="rerun-setup" class="btn btn-ghost btn-sm">Run Setup Again</button>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="settings-content">
+          <!-- General Tab -->
+          <div class="tab-content active" id="tab-general">
+            <h2>General Settings</h2>
+
+            <div class="setting-card">
+              <h3>API Keys</h3>
+              <div class="setting-row">
+                <label>Groq API Key <span class="badge">Transcription</span></label>
+                <div class="input-group">
+                  <input type="password" id="settings-groq-key" placeholder="gsk_...">
+                  <button class="btn btn-sm btn-secondary toggle-visibility" data-target="settings-groq-key">Show</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <label>OpenRouter API Key <span class="badge">Post-processing</span></label>
+                <div class="input-group">
+                  <input type="password" id="settings-openrouter-key" placeholder="sk-or-...">
+                  <button class="btn btn-sm btn-secondary toggle-visibility" data-target="settings-openrouter-key">Show</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-card">
+              <h3>Model</h3>
+              <div class="setting-row">
+                <label>OpenRouter Model</label>
+                <select id="settings-model">
+                  <option value="meta-llama/llama-3.1-70b-instruct">Llama 3.1 70B</option>
+                  <option value="meta-llama/llama-3.1-8b-instruct">Llama 3.1 8B (faster)</option>
+                  <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
+                  <option value="anthropic/claude-3.5-haiku">Claude 3.5 Haiku</option>
+                  <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+                  <option value="mistralai/mistral-large-latest">Mistral Large</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="setting-card">
+              <h3>Language</h3>
+              <div class="setting-row">
+                <label>Transcription Language</label>
+                <select id="settings-transcription-language">
+                  <option value="auto">Auto-detect</option>
+                  <option value="en">English</option>
+                  <option value="es">Spanish</option>
+                  <option value="hi">Hindi</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="zh">Chinese</option>
+                  <option value="ja">Japanese</option>
+                  <option value="ko">Korean</option>
+                  <option value="ar">Arabic</option>
+                  <option value="pt">Portuguese</option>
+                  <option value="ru">Russian</option>
+                  <option value="it">Italian</option>
+                  <option value="nl">Dutch</option>
+                  <option value="tr">Turkish</option>
+                  <option value="pl">Polish</option>
+                  <option value="sv">Swedish</option>
+                  <option value="id">Indonesian</option>
+                  <option value="th">Thai</option>
+                  <option value="vi">Vietnamese</option>
+                  <option value="uk">Ukrainian</option>
+                  <option value="cs">Czech</option>
+                  <option value="ro">Romanian</option>
+                  <option value="el">Greek</option>
+                  <option value="he">Hebrew</option>
+                  <option value="bn">Bengali</option>
+                  <option value="ta">Tamil</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label>Translate To</label>
+                <select id="settings-translate-language">
+                  <option value="en">English</option>
+                  <option value="es">Spanish</option>
+                  <option value="hi">Hindi</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="zh">Chinese</option>
+                  <option value="ja">Japanese</option>
+                  <option value="ko">Korean</option>
+                  <option value="ar">Arabic</option>
+                  <option value="pt">Portuguese</option>
+                  <option value="ru">Russian</option>
+                  <option value="it">Italian</option>
+                  <option value="nl">Dutch</option>
+                  <option value="tr">Turkish</option>
+                  <option value="pl">Polish</option>
+                  <option value="sv">Swedish</option>
+                  <option value="id">Indonesian</option>
+                  <option value="th">Thai</option>
+                  <option value="vi">Vietnamese</option>
+                  <option value="uk">Ukrainian</option>
+                  <option value="cs">Czech</option>
+                  <option value="ro">Romanian</option>
+                  <option value="el">Greek</option>
+                  <option value="he">Hebrew</option>
+                  <option value="bn">Bengali</option>
+                  <option value="ta">Tamil</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="setting-card">
+              <h3>Push-to-Talk</h3>
+              <div class="setting-row">
+                <div class="key-options">
+                  <label class="key-option selected" data-key="fn">
+                    <input type="radio" name="settings-ptt-key" value="fn" checked>
+                    <span class="key-option-label">Fn (Globe)</span>
+                  </label>
+                  <label class="key-option" data-key="right-option">
+                    <input type="radio" name="settings-ptt-key" value="right-option">
+                    <span class="key-option-label">Right Option</span>
+                  </label>
+                  <label class="key-option" data-key="custom">
+                    <input type="radio" name="settings-ptt-key" value="custom">
+                    <span class="key-option-label">Custom Key</span>
+                    <input type="text" id="settings-ptt-custom-key-input" class="custom-key-input" readonly placeholder="Click to set key..." style="display:none">
+                  </label>
+                </div>
+                <p class="hint hint-tip" id="settings-fn-tip">Tip: If Fn opens Emoji picker, go to System Settings &rarr; Keyboard &rarr; "Press globe key to" &rarr; Do Nothing</p>
+              </div>
+            </div>
+
+            <div class="setting-card">
+              <h3>Indicator Style</h3>
+              <p class="setting-desc">Choose how the recording indicator looks on your screen.</p>
+              <div class="style-options settings-style-options">
+                <label class="style-option selected" data-style="pill">
+                  <input type="radio" name="settings-overlay-style" value="pill" checked>
+                  <div class="style-preview style-preview-pill">
+                    <div class="sp-dot"></div>
+                    <div class="sp-bars"><span></span><span></span><span></span><span></span><span></span></div>
+                    <div class="sp-time">0:03</div>
+                  </div>
+                  <span class="style-option-label">Waveform Pill</span>
+                  <span class="style-option-desc">Frosted pill with waveform and timer</span>
+                </label>
+                <label class="style-option" data-style="dot">
+                  <input type="radio" name="settings-overlay-style" value="dot">
+                  <div class="style-preview style-preview-dot">
+                    <div class="sp-circle"></div>
+                  </div>
+                  <span class="style-option-label">Minimal Dot</span>
+                  <span class="style-option-desc">Tiny color-changing dot, like iPhone</span>
+                </label>
+                <label class="style-option" data-style="bar">
+                  <input type="radio" name="settings-overlay-style" value="bar">
+                  <div class="style-preview style-preview-bar">
+                    <span class="sp-text">Recording</span>
+                    <div class="sp-gradient"></div>
+                  </div>
+                  <span class="style-option-label">Glass Bar</span>
+                  <span class="style-option-desc">Frosted bar with animated gradient line</span>
+                </label>
+                <label class="style-option" data-style="orb">
+                  <input type="radio" name="settings-overlay-style" value="orb">
+                  <div class="style-preview style-preview-orb">
+                    <div class="sp-orb"></div>
+                  </div>
+                  <span class="style-option-label">AI Orb</span>
+                  <span class="style-option-desc">Pulsing sphere that reacts to your voice</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-card">
+              <h3>Completion Sound</h3>
+              <p class="setting-desc">Play a sound when transcription is complete.</p>
+              <div class="setting-row">
+                <label class="toggle-row">
+                  <input type="checkbox" id="settings-sound-enabled" checked>
+                  <span>Enable completion sound</span>
+                </label>
+              </div>
+              <div id="sound-options" class="sound-options">
+                <!-- Populated dynamically -->
+              </div>
+              <div class="setting-row" style="margin-top: 8px;">
+                <button id="add-custom-sound" class="btn btn-secondary btn-sm">Add Custom Sound...</button>
+              </div>
+            </div>
+
+            <div class="setting-card">
+              <h3>Paste Behavior</h3>
+              <div class="setting-row">
+                <label class="toggle-row">
+                  <input type="checkbox" id="settings-auto-paste" checked>
+                  <span>Auto-paste after transcription</span>
+                </label>
+                <p class="hint">When disabled, text is only copied to clipboard.</p>
+              </div>
+            </div>
+
+            <div class="setting-card">
+              <h3>Custom Vocabulary</h3>
+              <div class="setting-row">
+                <label>Words/names to spell correctly (comma or newline separated)</label>
+                <textarea id="settings-vocabulary" rows="3" placeholder="e.g. Kubernetes, TypeScript, OpenRouter"></textarea>
+              </div>
+            </div>
+
+            <div class="setting-card">
+              <h3>Permissions</h3>
+              <div class="permission-list">
+                <div class="permission-row">
+                  <span>Microphone</span>
+                  <span id="perm-mic" class="perm-status">Checking...</span>
+                </div>
+                <div class="permission-row">
+                  <span>Accessibility</span>
+                  <span id="perm-accessibility" class="perm-status">Checking...</span>
+                </div>
+              </div>
+            </div>
+
+            <button id="save-settings" class="btn btn-primary">Save Settings</button>
+            <span id="save-status" class="status-msg"></span>
+          </div>
+
+          <!-- Prompts Tab -->
+          <div class="tab-content" id="tab-prompts">
+            <h2>Prompt Profiles</h2>
+
+            <div class="setting-card">
+              <h3>Profiles</h3>
+              <p class="setting-desc">Create different prompts for different contexts. The active profile is used for post-processing.</p>
+              <div class="profile-list" id="profile-list">
+                <!-- Populated dynamically -->
+              </div>
+              <div class="profile-add-row">
+                <button id="add-profile" class="btn btn-secondary btn-sm">+ Add Profile</button>
+              </div>
+            </div>
+
+            <div class="setting-card" id="profile-editor-card" style="display: none;">
+              <div class="profile-editor-header">
+                <h3 id="profile-editor-title">Edit Profile</h3>
+                <span class="badge" id="profile-default-badge" style="display: none;">Default</span>
+              </div>
+              <div class="setting-row">
+                <label for="profile-name-input">Profile Name</label>
+                <input type="text" id="profile-name-input" placeholder="e.g. Email, Code, Slack">
+              </div>
+              <div class="setting-row">
+                <label for="profile-prompt-input">System Prompt</label>
+                <textarea id="profile-prompt-input" rows="8" placeholder="Leave blank for the built-in default prompt..."></textarea>
+              </div>
+              <div class="profile-editor-actions">
+                <button id="save-profile" class="btn btn-primary btn-sm">Save Profile</button>
+                <button id="set-default-profile" class="btn btn-secondary btn-sm">Set as Default</button>
+                <button id="delete-profile" class="btn btn-ghost btn-sm" style="margin-left: auto; color: var(--error);">Delete</button>
+              </div>
+              <span id="profile-save-status" class="status-msg"></span>
+            </div>
+
+            <div class="setting-card">
+              <h3>Auto-Switch Rules</h3>
+              <p class="setting-desc">Automatically use a profile when a specific app is active. App name is matched as a substring (e.g. "Slack", "Code").</p>
+              <div class="auto-switch-rules" id="auto-switch-rules">
+                <!-- Populated dynamically -->
+              </div>
+              <div class="auto-switch-add-row">
+                <input type="text" id="auto-switch-app-input" placeholder="App name (e.g. Slack)" class="auto-switch-input">
+                <select id="auto-switch-profile-select" class="auto-switch-select">
+                  <!-- Populated dynamically -->
+                </select>
+                <button id="add-auto-switch-rule" class="btn btn-secondary btn-sm">Add Rule</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- History Tab -->
+          <div class="tab-content" id="tab-history">
+            <h2>Transcription History</h2>
+            <div class="history-search">
+              <input type="text" id="history-search-input" placeholder="Search transcriptions..." autocomplete="off">
+            </div>
+            <div id="history-list" class="history-list">
+              <p class="empty-state">No transcriptions yet. Use your shortcut to start recording!</p>
+            </div>
+            <button id="clear-history" class="btn btn-ghost btn-sm">Clear History</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden audio recorder -->
+  <div id="recorder-status" style="display:none;"></div>
+
+  <script src="renderer/state.js"></script>
+  <script src="renderer/key-codes.js"></script>
+  <script src="renderer/test-ui.js"></script>
+  <script src="renderer/permissions.js"></script>
+  <script src="renderer/history.js"></script>
+  <script src="renderer/sounds.js"></script>
+  <script src="renderer/profiles-ui.js"></script>
+  <script src="renderer/recording.js"></script>
+  <script src="renderer/wizard.js"></script>
+  <script src="renderer/settings-ui.js"></script>
+  <script src="renderer/init.js"></script>
+</body>
+</html>
