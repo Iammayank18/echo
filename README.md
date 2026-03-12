@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="build/icon.png" width="120" alt="Echo icon" />
+</p>
+
 # Echo
 
 AI-powered voice transcription for macOS — open source alternative to [Wispr Flow](https://wisprflow.ai).
