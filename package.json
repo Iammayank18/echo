@@ -6,10 +6,10 @@
   "scripts": {
     "start": "electron .",
     "dev": "NODE_ENV=development electron .",
-    "build": "electron-builder --mac --arm64 --x64", 
+    "build": "yarn build:arm64 && yarn build:x64 && yarn build:universal", 
     "build:arm64": "electron-builder --mac --arm64",
     "build:x64": "electron-builder --mac --x64",
-    "build:all": "electron-builder --mac --arm64 --x64",
+    "build:universal": "electron-builder --mac --universal",
     "pack": "electron-builder --mac --dir"
   },
   "author": "",
