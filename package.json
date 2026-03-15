@@ -1,6 +1,6 @@
 {
   "name": "echo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI-powered voice transcription for macOS - Open source alternative to Wispr Flow",
   "main": "src/main.js",
   "scripts": {
