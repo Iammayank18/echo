@@ -64,6 +64,12 @@ async function loadSettings() {
     autoPasteCheckbox.checked = settings.autoPasteEnabled !== undefined ? settings.autoPasteEnabled : true;
   }
 
+  // Load developer mode setting
+  const devModeCheckbox = document.getElementById('settings-developer-mode');
+  if (devModeCheckbox) {
+    devModeCheckbox.checked = settings.developerMode === true;
+  }
+
   // Load sound settings
   await loadSoundOptions();
   const soundCheckbox = document.getElementById('settings-sound-enabled');
@@ -135,6 +141,11 @@ function setupSettingsListeners() {
     const autoPasteCheckbox = document.getElementById('settings-auto-paste');
     if (autoPasteCheckbox) {
       await voiceAI.setSetting('autoPasteEnabled', autoPasteCheckbox.checked);
+    }
+
+    const devModeCheckbox = document.getElementById('settings-developer-mode');
+    if (devModeCheckbox) {
+      await voiceAI.setSetting('developerMode', devModeCheckbox.checked);
     }
 
     const soundEnabled = document.getElementById('settings-sound-enabled');

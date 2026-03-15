@@ -2,17 +2,20 @@ const { app } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
-const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+function getSettingsPath() {
+  return path.join(app.getPath('userData'), 'settings.json');
+}
 
 function loadSettings() {
   try {
-    return JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+    return JSON.parse(fs.readFileSync(getSettingsPath(), 'utf-8'));
   } catch {
     return {};
   }
 }
 
 function saveSettings(data) {
+  const settingsPath = getSettingsPath();
   const dir = path.dirname(settingsPath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(settingsPath, JSON.stringify(data, null, 2));

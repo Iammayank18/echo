@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupWizardListeners();
     setupSettingsListeners();
     checkPermissions();
+    setInterval(checkPermissions, 2000);
   } catch (err) {
     console.error('[APP INIT ERROR]', err);
     document.body.innerHTML = `<pre style="color:red;padding:20px;">${err.stack || err}</pre>`;

@@ -111,22 +111,40 @@ function setupWizardListeners() {
     const granted = await voiceAI.requestAccessibility();
     showAccGranted(granted);
     if (!granted) {
-      // Open System Settings directly so user doesn't have to navigate
-      await voiceAI.openAccessibilitySettings();
       btn.textContent = 'Checking...';
       btn.disabled = true;
       showAccHint(false);
+
+      // Immediately show instructions — on macOS 15 the app may not auto-appear in the list
+      const instrHint = document.getElementById('acc-instructions-hint');
+      if (instrHint) instrHint.style.display = 'block';
+
+      // Show restart hint after 5 s (macOS 15 requires restart to activate accessibility)
+      const restartHintTimer = setTimeout(() => {
+        const hint = document.getElementById('acc-restart-hint');
+        if (hint) hint.style.display = 'block';
+      }, 5000);
+
       let attempts = 0;
       const poll = setInterval(async () => {
         attempts++;
         const check = await voiceAI.checkAccessibility();
         if (check) {
+          clearTimeout(restartHintTimer);
+          if (instrHint) instrHint.style.display = 'none';
+          const restartHint = document.getElementById('acc-restart-hint');
+          if (restartHint) restartHint.style.display = 'none';
           showAccGranted(true);
           showAccHint(false);
           clearInterval(poll);
+          return;
         }
-        if (attempts > 30) {
+        if (attempts > 60) {
           clearInterval(poll);
+          clearTimeout(restartHintTimer);
+          if (instrHint) instrHint.style.display = 'none';
+          const restartHint = document.getElementById('acc-restart-hint');
+          if (restartHint) restartHint.style.display = 'none';
           btn.textContent = 'Check Again';
           btn.disabled = false;
           showAccHint(true);

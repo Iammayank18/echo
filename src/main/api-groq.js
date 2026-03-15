@@ -37,6 +37,22 @@ async function transcribeAudio(audioBuffer, mimeType = 'audio/webm', language = 
     ));
   }
 
+  if (getSetting('developerMode', false)) {
+    const devPrompt = 'process.env, index.tsx, package.json, src/components/App.tsx, const myFunc = () =>, import { useState } from "react", ./utils/helpers, __dirname, API_KEY, camelCase, snake_case';
+    parts.push(Buffer.from(
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="prompt"\r\n\r\n` +
+      `${devPrompt}\r\n`
+    ));
+  } else {
+    const plainPrompt = 'Transcribe speech exactly as spoken words. Write out punctuation and symbols as words: "dot" for period, "slash" for /, "underscore" for _, "dash" for hyphen. Do not convert spoken words into code notation or programming syntax.';
+    parts.push(Buffer.from(
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="prompt"\r\n\r\n` +
+      `${plainPrompt}\r\n`
+    ));
+  }
+
   parts.push(Buffer.from(`--${boundary}--\r\n`));
 
   const body = Buffer.concat(parts);
