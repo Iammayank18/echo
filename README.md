@@ -13,6 +13,7 @@ AI-powered voice transcription for macOS — open source alternative to [Wispr F
 - Tray-based — no dock icon
 - Auto-pastes transcribed text into the active app
 - Multiple profiles with per-profile system prompts
+- **Developer Mode** — optimises transcription for code: filenames, paths, and symbols (`_`, `.`, `/`) are output as code notation instead of spoken words
 
 ## Requirements
 
@@ -84,6 +85,9 @@ Open **Settings** via the tray icon (menu bar). You can configure:
 - Transcription model
 - Push-to-talk hotkey (Fn or Right Option)
 - Profiles — each profile can have its own system prompt for post-processing transcriptions
+- **Developer Mode** — toggle in Settings → Developer Mode
+  - **ON**: Whisper is primed with code patterns; spoken symbols become code notation (`process.env`, `./utils`, `snake_case`)
+  - **OFF**: symbols are transcribed as spoken words (`"dot env"`, `"slash utils"`, `"snake underscore case"`)
 
 ## License
 
